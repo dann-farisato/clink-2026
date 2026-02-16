@@ -12,6 +12,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap"
     rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <style>
     /* ═══════════════════════════════════════
        RESET & FOUNDATIONS
@@ -1530,6 +1531,35 @@
         display: none;
       }
     }
+
+    /* form feedback */
+    .form-feedback {
+      margin-top: 16px;
+      padding: 14px 20px;
+      border-radius: var(--radius);
+      font-size: 0.92rem;
+      text-align: center;
+      display: none;
+    }
+
+    .form-feedback.success {
+      display: block;
+      background: rgba(34, 139, 34, 0.08);
+      color: #1a7a1a;
+      border: 1px solid rgba(34, 139, 34, 0.2);
+    }
+
+    .form-feedback.error {
+      display: block;
+      background: rgba(212, 50, 50, 0.08);
+      color: #b33;
+      border: 1px solid rgba(212, 50, 50, 0.2);
+    }
+
+    .btn.loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
   </style>
 </head>
 
@@ -2065,7 +2095,7 @@
               da sua carreira ou do seu negócio.</p>
           </div>
 
-          <form class="contact-form reveal-right" action="#" method="POST">
+          <form class="contact-form reveal-right" id="contactForm">
             <div class="form-group">
               <label for="nome">Nome</label>
               <input type="text" id="nome" name="nome" placeholder="Seu nome completo" required>
@@ -2094,6 +2124,7 @@
               </svg>
               Quero conversar com a CVLINK
             </button>
+            <div id="formFeedback" class="form-feedback"></div>
           </form>
         </div>
       </div>
@@ -2159,6 +2190,37 @@
           btn.setAttribute('aria-expanded', 'true');
         }
       });
+    });
+
+    // EmailJS
+    emailjs.init('gS-yHfpA5RnMbvnXv');
+
+    const contactForm = document.getElementById('contactForm');
+    const formFeedback = document.getElementById('formFeedback');
+    const submitBtn = contactForm.querySelector('button[type="submit"]');
+    const submitText = submitBtn.innerHTML;
+
+    contactForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      submitBtn.classList.add('loading');
+      submitBtn.innerHTML = 'Enviando...';
+      formFeedback.className = 'form-feedback';
+
+      emailjs.sendForm('service_d5nswoh', 'template_0ywlxri', this)
+        .then(function() {
+          formFeedback.textContent = 'Mensagem enviada com sucesso! Entrarei em contato em breve.';
+          formFeedback.className = 'form-feedback success';
+          contactForm.reset();
+        })
+        .catch(function() {
+          formFeedback.textContent = 'Erro ao enviar. Tente novamente ou entre em contato por outro canal.';
+          formFeedback.className = 'form-feedback error';
+        })
+        .finally(function() {
+          submitBtn.classList.remove('loading');
+          submitBtn.innerHTML = submitText;
+        });
     });
   </script>
 </body>
