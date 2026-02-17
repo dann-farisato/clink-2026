@@ -1560,6 +1560,48 @@
       opacity: 0.7;
       pointer-events: none;
     }
+
+    /* toast */
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      right: 32px;
+      padding: 18px 28px;
+      border-radius: var(--radius);
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--white);
+      z-index: 10000;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      transform: translateY(120%);
+      opacity: 0;
+      transition: transform 0.5s var(--ease-spring), opacity 0.4s;
+      max-width: 400px;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      background: #1a7a1a;
+    }
+
+    .toast.error {
+      background: #b33;
+    }
+
+    @media (max-width: 767px) {
+      .toast {
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        max-width: none;
+        text-align: center;
+      }
+    }
   </style>
 </head>
 
@@ -2098,23 +2140,15 @@
           <form class="contact-form reveal-right" id="contactForm">
             <div class="form-group">
               <label for="nome">Nome</label>
-              <input type="text" id="nome" name="nome" placeholder="Seu nome completo" required>
+              <input type="text" id="nome" name="name" placeholder="Seu nome completo" required>
             </div>
             <div class="form-group">
               <label for="email">E-mail</label>
               <input type="email" id="email" name="email" placeholder="seu@email.com" required>
             </div>
             <div class="form-group">
-              <label for="interesse">Tipo de interesse</label>
-              <select id="interesse" name="interesse" required>
-                <option value="" disabled selected>Selecione uma opção</option>
-                <option value="carreira">Carreira</option>
-                <option value="empresa">Empresa</option>
-              </select>
-            </div>
-            <div class="form-group">
               <label for="mensagem">Mensagem</label>
-              <textarea id="mensagem" name="mensagem"
+              <textarea id="mensagem" name="message"
                 placeholder="Conte um pouco sobre o que você precisa..."></textarea>
             </div>
             <button type="submit" class="btn btn-primary">
@@ -2124,13 +2158,15 @@
               </svg>
               Quero conversar com a CVLINK
             </button>
-            <div id="formFeedback" class="form-feedback"></div>
           </form>
         </div>
       </div>
     </section>
 
   </main>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
 
   <!-- ════════════ FOOTER ════════════ -->
   <footer>
@@ -2192,11 +2228,26 @@
       });
     });
 
+    // Toast
+    const toast = document.getElementById('toast');
+    let toastTimer = null;
+    function showToast(message, type) {
+      if (toastTimer) clearTimeout(toastTimer);
+      toast.textContent = message;
+      toast.className = 'toast ' + type;
+      // force reflow before adding show class
+      void toast.offsetWidth;
+      toast.classList.add('show');
+      toastTimer = setTimeout(function() {
+        toast.classList.remove('show');
+        toastTimer = null;
+      }, 8000);
+    }
+
     // EmailJS
     emailjs.init('gS-yHfpA5RnMbvnXv');
 
     const contactForm = document.getElementById('contactForm');
-    const formFeedback = document.getElementById('formFeedback');
     const submitBtn = contactForm.querySelector('button[type="submit"]');
     const submitText = submitBtn.innerHTML;
 
@@ -2205,17 +2256,14 @@
 
       submitBtn.classList.add('loading');
       submitBtn.innerHTML = 'Enviando...';
-      formFeedback.className = 'form-feedback';
 
       emailjs.sendForm('service_d5nswoh', 'template_0ywlxri', this)
         .then(function() {
-          formFeedback.textContent = 'Mensagem enviada com sucesso! Entrarei em contato em breve.';
-          formFeedback.className = 'form-feedback success';
+          showToast('Mensagem enviada! Entraremos em contato em breve.', 'success');
           contactForm.reset();
         })
         .catch(function() {
-          formFeedback.textContent = 'Erro ao enviar. Tente novamente ou entre em contato por outro canal.';
-          formFeedback.className = 'form-feedback error';
+          showToast('Erro ao enviar. Tente novamente ou entre em contato por outro canal.', 'error');
         })
         .finally(function() {
           submitBtn.classList.remove('loading');
